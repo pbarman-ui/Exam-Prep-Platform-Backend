@@ -6,18 +6,21 @@ const jwt = require("jsonwebtoken");
 const verifyToken = require("../middleware/authMiddleware");
 
 
-// LOGIN ROUTE
+// ================= LOGIN ROUTE =================
 router.post("/login", async (req, res) => {
 
   const { email, password } = req.body;
 
+  // SAFE QUERY WITH BINDS
   const query = `
-    SELECT * FROM userdetails
-    WHERE email='${email}'
+    SELECT * 
+    FROM LOGINDETAILS.PUBLIC.USERDETAILS
+    WHERE EMAIL = ?
   `;
 
   connection.execute({
     sqlText: query,
+    binds: [email],
 
     complete: function (err, stmt, rows) {
 
@@ -67,7 +70,7 @@ router.post("/login", async (req, res) => {
 });
 
 
-// PROTECTED DASHBOARD ROUTE
+// ================= PROTECTED DASHBOARD ROUTE =================
 router.get("/dashboard", verifyToken, (req, res) => {
 
   res.json({
@@ -77,5 +80,76 @@ router.get("/dashboard", verifyToken, (req, res) => {
 
 });
 
+
+// ================= SIGNUP ROUTE =================
+router.post("/signup", (req, res) => {
+
+  const { name, email, password } = req.body;
+
+  // CHECK IF USER EXISTS
+  const checkQuery = `
+    SELECT * 
+    FROM LOGINDETAILS.PUBLIC.USERDETAILS
+    WHERE EMAIL = ?
+  `;
+
+  connection.execute({
+    sqlText: checkQuery,
+    binds: [email],
+
+    complete: function (err, stmt, rows) {
+
+      // DATABASE ERROR
+      if (err) {
+        return res.status(500).json({
+          message: "Database error",
+          error: err.message,
+        });
+      }
+
+      // USER ALREADY EXISTS
+      if (rows.length > 0) {
+        return res.status(400).json({
+          message: "User already exists",
+        });
+      }
+
+      // INSERT NEW USER
+      const insertQuery = `
+        INSERT INTO LOGINDETAILS.PUBLIC.USERDETAILS
+        (ID, NAME, EMAIL, PASSWORD)
+        VALUES (?, ?, ?, ?)
+      `;
+
+      const id = Date.now().toString();
+
+      connection.execute({
+        sqlText: insertQuery,
+        binds: [id, name, email, password],
+
+        complete: function (err2) {
+
+          // INSERT ERROR
+          if (err2) {
+            return res.status(500).json({
+              message: "Insert failed",
+              error: err2.message,
+            });
+          }
+
+          // SUCCESS RESPONSE
+          return res.status(201).json({
+            message: "User created successfully",
+            user: {
+              id,
+              name,
+              email,
+            },
+          });
+        },
+      });
+    },
+  });
+});
 
 module.exports = router;
