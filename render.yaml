@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     region: singapore
-    branch: feature/questions
+    branch: main
     rootDir: .
     buildCommand: npm ci --omit=dev
     startCommand: node src/server.js

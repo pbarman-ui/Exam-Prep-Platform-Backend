@@ -5,6 +5,8 @@ node_modules/
 .env.*
 !.env.example
 serviceAccountKey.json
+.deploy.secrets.local
+*.secrets.local
 
 # Logs
 *.log
