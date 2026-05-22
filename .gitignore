@@ -1,1 +1,17 @@
 node_modules/
+
+# Secrets
+.env
+.env.*
+!.env.example
+serviceAccountKey.json
+
+# Logs
+*.log
+logs/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
